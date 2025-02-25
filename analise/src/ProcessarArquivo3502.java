@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -116,7 +117,27 @@ public class ProcessarArquivo3502 {
 
                     // Definir valores conforme a coluna
                     switch (i) {
-                        case 0 -> cell.setCellValue(data);
+                        case 0 -> 
+                        {   
+                            // Crie um SimpleDateFormat para analisar a string
+                            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
+                            
+                            try {
+                                // Converta a string em um objeto Date
+                                Date dataConvertida = parser.parse(data);
+                                
+                                // Crie um SimpleDateFormat para formatar a data no formato desejado
+                                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                                
+                                // Formate a data e defina o valor na célula
+                                String dataFormatada = formatter.format(dataConvertida);
+                                cell.setCellValue(dataFormatada);
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                                // Trate a exceção de parsing aqui
+                            }
+                           // cell.setCellValue(sdf.parse(data.toString()));// DATA sdf.format(dataAtual)
+                        }
                         case 1 -> cell.setCellValue(agente);// OPE
                         //case 2 -> cell.setCellValue("");// LI
                         //case 3 -> cell.setCellValue("");// LF
