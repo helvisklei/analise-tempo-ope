@@ -16,7 +16,11 @@ public class ProcessarArquivo3601 {
 
     public Map<String, String[]> processarArquivo(String csvFile) {
         Map<String, String[]> dados3601 = new HashMap<>();        
-        String outputExcel = "Login_e_Pausas_das_Operadora.xlsx";
+        String outputExcel = "Login_e_Pausas_das_Operadora.xlsx";   
+        
+        //long breakSegundos = 0L;
+        //long toiletSegundos = 0L; 
+        //String  totalDePausasFormatado = "00:00:00";
 
         try {
             // Leitura do CSV
@@ -107,13 +111,24 @@ public class ProcessarArquivo3601 {
                     }
                 }
                 String tlFormatado = secondsToTime(timeToSeconds(getLoginFinal(detalhesEventos)) - timeToSeconds(getLoginInicial(detalhesEventos)));
+                // Calcula os totais em segundos
+                Long breakSegundos = timeToSeconds(extrairDuracao(formatPausa(pausas.get("Break"))));
+                Long toiletSegundos = timeToSeconds(extrairDuracao(formatPausa(pausas.get("Toilet")))); 
+                Long lancheSegundos = timeToSeconds(extrairDuracao(formatPausa(pausas.get("Lanche"))));
+                Long ginasticaSegundos = timeToSeconds(extrairDuracao(formatPausa(pausas.get("Ginástica"))));
+                Long assuntosInternosSegundos =timeToSeconds(extrairDuracao(formatPausa(pausas.get("Assuntos Internos"))));
+                Long outrosSegundos =timeToSeconds(extrairDuracao(formatPausa(pausas.get("Outros"))));
+                // Soma os totais em segundos
+                long totalDePausas = breakSegundos + toiletSegundos+lancheSegundos+ginasticaSegundos+assuntosInternosSegundos+outrosSegundos; 
 
+                String  totalDePausasFormatado  = secondsToTime(totalDePausas);
                 // Armazena LI, LF e TL no mapa
                 dados3601.put(agente, new String[]{getLoginInicial(detalhesEventos), getLoginFinal(detalhesEventos),
-                            tlFormatado,formatPausa(pausas.get("Break")),formatPausa(pausas.get("Toilet")),
-                            formatPausa(pausas.get("Lanche")),formatPausa(pausas.get("Ginástica")),
-                            formatPausa(pausas.get("Assuntos Internos")),formatPausa(pausas.get("Outros"))});
-
+                    tlFormatado,formatPausa(pausas.get("Break")),formatPausa(pausas.get("Toilet")),
+                    formatPausa(pausas.get("Lanche")),formatPausa(pausas.get("Ginástica")),
+                    formatPausa(pausas.get("Assuntos Internos")),formatPausa(pausas.get("Outros")),
+                    totalDePausasFormatado}); 
+               
                 //System.out.println("Dados agente \n"+ dados3601);
                 // Criando a linha na planilha
                 Row row = sheet.createRow(rowNum++);
@@ -235,4 +250,20 @@ public class ProcessarArquivo3601 {
         String duracaoFormatada = secondsToTime(duracaoSegundos);
         return eventDetails.getQuantidade() + " - " + duracaoFormatada;
     }
+    /**
+     * Extrai a duração formatada de uma string no formato "quantidade - duração".
+     *
+     * @param pausaFormatada String no formato "quantidade - duração".
+     * @return String contendo apenas a duração no formato "HH:mm:ss".
+    */
+    private static String extrairDuracao(String pausaFormatada) {
+        if (pausaFormatada == null || !pausaFormatada.contains(" - ")) {
+            return "00:00:00"; // Retorna um valor padrão caso o formato seja inválido
+        }
+        // Encontra o índice do hífen e adiciona 3 para pular o espaço, hífen e espaço
+        int indiceHifen = pausaFormatada.indexOf(" - ") + 3;
+        // Retorna a substring a partir do índice do hífen até o final da string
+        return pausaFormatada.substring(indiceHifen);
+    }
+
 }

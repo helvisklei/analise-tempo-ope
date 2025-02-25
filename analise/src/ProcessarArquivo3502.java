@@ -44,7 +44,7 @@ public class ProcessarArquivo3502 {
             Row headerRow = sheet.createRow(0);
 
             // Cabeçalhos
-            String[] headers = { "DATA", "OPERADORA","LI","LF", "1ºL", "TULD","TL", "QTD", "%THPA", "TTL", "%TTL", "TMA", "MTSL"
+            String[] headers = { "DATA", "OPERADORA","LI","LF", "1ºL", "TULD","TL","JTD", "QTD", "%THPA", "TTL", "%TTL", "TMA", "MTSL"
                                 ,"","BREAK","TOILET","LANCHE","GINÁSTICA","ASS. INTERNO", "OUTROS"}; 
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -111,24 +111,25 @@ public class ProcessarArquivo3502 {
                 Row row = sheet.createRow(rowIndex++);
                 CellStyle estiloBorda = EstilosExcel.getCellStyleWithBorders(workbook);
 
-                for (int i = 0; i <= 19; i++) { // demarca as linhas com as bordas
+                for (int i = 0; i <= 20; i++) { // demarca as linhas com as bordas
                     Cell cell = row.createCell(i);                    
 
                     // Definir valores conforme a coluna
                     switch (i) {
                         case 0 -> cell.setCellValue(data);
                         case 1 -> cell.setCellValue(agente);// OPE
-                        //case 2 -> cell.setCellValue("");// OPE
-                        //case 3 -> cell.setCellValue("");// OPE
+                        //case 2 -> cell.setCellValue("");// LI
+                        //case 3 -> cell.setCellValue("");// LF
                         case 4 -> cell.setCellValue(menorHoraInicial);// era posição 2 - 1 L
                         case 5 -> cell.setCellValue(maiorHoraFinal); // era posição 3 - TULD
-                        case 6 -> cell.setCellValue("");// OPE
-                        case 7 -> cell.setCellValue(repeticoes);// era posição 4 QTD
-                        case 8 -> cell.setCellValue(porcentagemTotalHorasTrabalhadasNPa + "%");// ra posição 5 QTD
-                        case 9 -> cell.setCellValue(formatarSegundos(tempoTrabalhado));// ra posição 6 QTD
-                        case 10 -> cell.setCellValue(porcentagemTempoTotalEmLigacao + "%");
-                        case 11 -> cell.setCellValue(tma);
-                        case 12 -> cell.setCellValue(formatarSegundos(mtsl));                      
+                        //case 6 -> cell.setCellValue("");// TL  segunda planilha dados vindo abaixo
+                        //case 7 -> cell.setCellValue("");// era posição 4 QTD
+                        case 8 -> cell.setCellValue(repeticoes);// era posição 4 QTD
+                        case 9 -> cell.setCellValue(porcentagemTotalHorasTrabalhadasNPa + "%");// ra posição 5 QTD
+                        case 10 -> cell.setCellValue(formatarSegundos((tempoTrabalhado)));// ra posição ttl
+                        case 11 -> cell.setCellValue(porcentagemTempoTotalEmLigacao + "%");
+                        case 12 -> cell.setCellValue(tma);
+                        case 13 -> cell.setCellValue(formatarSegundos(mtsl));                      
                       
                     }
                   
@@ -153,49 +154,76 @@ public class ProcessarArquivo3502 {
                     String[] dadosAgente3601 = dados3601.get(agente);
                     row.createCell(2).setCellValue(dadosAgente3601[0]); // LI
                     row.createCell(3).setCellValue(dadosAgente3601[1]); // LF
-                    row.createCell(6).setCellValue(dadosAgente3601[2]); // TL                                       
-                    row.createCell(14).setCellValue(dadosAgente3601[3]); // Break
-                    row.createCell(15).setCellValue(dadosAgente3601[4]); // Toilet
-                    row.createCell(16).setCellValue(dadosAgente3601[5]); // Lanche
-                    row.createCell(17).setCellValue(dadosAgente3601[6]); // Ginastica
-                    row.createCell(18).setCellValue(dadosAgente3601[7]); // Assustos internos
-                    row.createCell(19).setCellValue(dadosAgente3601[8]); // Outros
+                    row.createCell(6).setCellValue(dadosAgente3601[2]); // TL    
+                    row.createCell(7).setCellValue(formatarSegundos(converterParaSegundos(dadosAgente3601[2])- converterParaSegundos(dadosAgente3601[9]))); // JTD  
+                   //row.createCell(14).setCellValue(""); // Break                                  
+                    row.createCell(15).setCellValue(dadosAgente3601[3]); // Break
+                    row.createCell(16).setCellValue(dadosAgente3601[4]); // Toilet
+                    row.createCell(17).setCellValue(dadosAgente3601[5]); // Lanche
+                    row.createCell(18).setCellValue(dadosAgente3601[6]); // Ginastica
+                    row.createCell(19).setCellValue(dadosAgente3601[7]); // Assustos internos
+                    row.createCell(20).setCellValue(dadosAgente3601[8]); // Outros
+
+                    
 
                     row.getCell(0).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(0);
+
                     row.getCell(1).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(1);
+
                     row.getCell(2).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(2);
+
                     row.getCell(3).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(3);
+
                     row.getCell(5).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(5);
+
                     row.getCell(6).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(6);
+
                     row.getCell(7).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(7);
+
                     row.getCell(8).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(8);
-                    //row.getCell(9).setCellStyle(estiloBorda);
-                    row.getCell(10).setCellStyle(estiloBorda);
-                    sheet.autoSizeColumn(10);
+
+                    row.getCell(9).setCellStyle(estiloBorda);
+                    sheet.autoSizeColumn(9);  
+                    
+                    //row.getCell(10).setCellStyle(estiloBorda);
+                    //sheet.autoSizeColumn(10);
+
                     row.getCell(11).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(11);
-                    row.getCell(12).setCellStyle(estiloBorda); 
+
+                    row.getCell(12).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(12);
-                    row.getCell(14).setCellStyle(estiloBorda);
-                    sheet.autoSizeColumn(14);
-                    row.getCell(15).setCellStyle(estiloBorda); 
+
+                    row.getCell(13).setCellStyle(estiloBorda); 
+                    sheet.autoSizeColumn(13);
+
+                    row.getCell(15).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(15);
-                    row.getCell(16).setCellStyle(estiloBorda);
+
+                    row.getCell(16).setCellStyle(estiloBorda); 
                     sheet.autoSizeColumn(16);
-                    row.getCell(17).setCellStyle(estiloBorda); 
+
+                    row.getCell(17).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(17);
-                    row.getCell(18).setCellStyle(estiloBorda);
+
+                    row.getCell(18).setCellStyle(estiloBorda); 
                     sheet.autoSizeColumn(18);
-                    row.getCell(19).setCellStyle(estiloBorda);   
-                    sheet.autoSizeColumn(19);                                     
+
+                    row.getCell(19).setCellStyle(estiloBorda);
+                    sheet.autoSizeColumn(19);
+
+                    row.getCell(20).setCellStyle(estiloBorda);
+                    sheet.autoSizeColumn(20);
+                    //row.getCell(20).setCellStyle(estiloBorda);   
+                    //sheet.autoSizeColumn(20);                                     
                     
                 }   
                 //System.out.println("Total de coolnas " + maxColumns);             
@@ -211,21 +239,22 @@ public class ProcessarArquivo3502 {
             totalRow.createCell(4).setCellValue("");
             totalRow.createCell(5).setCellValue("");
             totalRow.createCell(6).setCellValue("");
-            totalRow.createCell(7).setCellValue(tempoTotalRepeticoes);// QTD - tempo total repetições QTD
-            totalRow.createCell(8).setCellValue(totalPorcentoThpa); // %THPA
-            totalRow.createCell(9).setCellValue(formatarSegundos(tempoTrabalhadoTotal).trim()); // TTL Total de tempo trabalhado formatado
-            totalRow.createCell(10).setCellValue(totalPorcentoTtl); // %TTL
-            totalRow.createCell(11).setCellValue(formatarSegundos(tempoTotalTma).trim());// total de tempo TMA
-            totalRow.createCell(12).setCellValue(formatarSegundos(totalMtsl).trim());// MTSL
+            totalRow.createCell(7).setCellValue("");// 
+            totalRow.createCell(8).setCellValue(tempoTotalRepeticoes);// QTD - tempo total repetições QTD
+            totalRow.createCell(9).setCellValue(totalPorcentoThpa); // %THPA
+            totalRow.createCell(10).setCellValue(formatarSegundos(tempoTrabalhadoTotal).trim()); // TTL Total de tempo trabalhado formatado
+            totalRow.createCell(11).setCellValue(totalPorcentoTtl); // %TTL
+            totalRow.createCell(12).setCellValue(formatarSegundos(tempoTotalTma).trim());// total de tempo TMA
+            totalRow.createCell(13).setCellValue(formatarSegundos(totalMtsl).trim());// MTSL
 
             
             // 🔹 Mesclar a célula inicial nas linhas 1 e 2
             int ultimaLinha = sheet.getLastRowNum();
-            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha, sheet.getLastRowNum(), 0, 6)); // mescla celula em total
+            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha, sheet.getLastRowNum(), 0, 7)); // mescla celula em total
 
             // 🔹 Mesclar a célula inicial nas linhas 1 a 3
-            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha + 1, ultimaLinha + 1, 0, 6)); // mescla celula em Média
-            for (int i = 0; i <= 14; i++) {
+            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha + 1, ultimaLinha + 1, 0, 7)); // mescla celula em Média
+            for (int i = 0; i <= 15; i++) {
                 if (totalRow.getCell(i) != null) {
                     totalRow.getCell(i).setCellStyle(totalStyle);// coloca estilo azul em total  até 14                    
                 }
@@ -238,15 +267,16 @@ public class ProcessarArquivo3502 {
             totalRow2.createCell(3).setCellValue(" ");
             totalRow2.createCell(4).setCellValue(" ");
             totalRow2.createCell(5).setCellValue(" ");
-            totalRow2.createCell(6).setCellValue(" ");
-            totalRow2.createCell(7).setCellValue(Math.round(tempoTotalRepeticoes / (double) dadosPorAgente.size()));//QTD - 4 posição antiga
-            totalRow2.createCell(8).setCellValue(((totalPorcentoThpa / dadosPorAgente.size()) + "%").trim()); // Media THPA
-            totalRow2.createCell(9).setCellValue(formatarSegundos(tempoTrabalhadoTotal / dadosPorAgente.size()).trim()); // Media TTL
-            totalRow2.createCell(10).setCellValue(((totalPorcentoTtl / dadosPorAgente.size()) + "%").trim()); // TTL
-            totalRow2.createCell(11).setCellValue(formatarSegundos(tempoTotalTma / dadosPorAgente.size()).trim()); // TMA
-            totalRow2.createCell(12).setCellValue(formatarSegundos(totalMtsl / dadosPorAgente.size()).trim()); // MTSL
+            //totalRow2.createCell(6).setCellValue(" ");
+            totalRow2.createCell(7).setCellValue(Math.round(tempoTotalRepeticoes / (double) dadosPorAgente.size()));//
+            totalRow2.createCell(8).setCellValue(Math.round(tempoTotalRepeticoes / (double) dadosPorAgente.size()));//QTD - 4 posição antiga
+            totalRow2.createCell(9).setCellValue(((totalPorcentoThpa / dadosPorAgente.size()) + "%").trim()); // Media THPA
+            totalRow2.createCell(10).setCellValue(formatarSegundos(tempoTrabalhadoTotal / dadosPorAgente.size()).trim()); // Media TTL
+            totalRow2.createCell(11).setCellValue(((totalPorcentoTtl / dadosPorAgente.size()) + "%").trim()); // TTL
+            totalRow2.createCell(12).setCellValue(formatarSegundos(tempoTotalTma / dadosPorAgente.size()).trim()); // TMA
+            totalRow2.createCell(13).setCellValue(formatarSegundos(totalMtsl / dadosPorAgente.size()).trim()); // MTSL
 
-            for (int i = 0; i <= 12; i++) {
+            for (int i = 0; i <= 13; i++) {
                 if (totalRow2.getCell(i) != null) {
                     totalRow2.getCell(i).setCellStyle(totalStyle); // coloca estilo azul em media  até 12
                 }
@@ -257,17 +287,18 @@ public class ProcessarArquivo3502 {
 
             // A média está na penúltima linha
             Row mediaRow = sheet.getRow(totalLinhas);           
-            Cell mediaCell = mediaRow.getCell(7); // média QTD
+            Cell mediaCell = mediaRow.getCell(8); // média QTD 7
+            //System.out.println("Nuemro celula 7 "+mediaCell);
             String mediaValor = mediaCell.toString().trim(); // Pega o valor da média como string
 
-            Cell mediaCellTtl = mediaRow.getCell(9); // média TTL posição aintga 6
+            Cell mediaCellTtl = mediaRow.getCell(10); // média TTL posição aintga 9
             String mediaTtl = mediaCellTtl.toString().trim(); // Pega o valor da média como string
 
             // Percorre todas as linhas da coluna 4 (exceto somatório e média)
             for (int i = 1; i < totalLinhas - 1; i++) { // Começa em 1 para ignorar o cabeçalho
                 Row row = sheet.getRow(i);
                 if (row != null) {
-                    Cell cell = row.getCell(7); // Pega a célula da coluna 4 QTD
+                    Cell cell = row.getCell(8); // Pega a célula da coluna 8 QTD
                     if (cell != null) {
                         String valorCelula = cell.toString().trim(); // Converte o valor para string
                         boolean isTime = false; // Defina `true` se for tempo
@@ -278,7 +309,8 @@ public class ProcessarArquivo3502 {
                         cell.setCellStyle(style); // Aplica a formatação na célula
                     }
 
-                    Cell tempo = row.getCell(9); // pega valor da celula na coluna 6 TTL.
+                    Cell tempo = row.getCell(10); // pega valor da celula na coluna 10 TTL.
+                    //System.out.println("TTL " + tempo);
                     if (tempo != null) {
                         // String valorCelulaTtl = tempo.toString().trim();
                         String valorCelulaTtl = tempo.getCellType() == CellType.STRING
@@ -340,6 +372,13 @@ public class ProcessarArquivo3502 {
         } catch (Exception e) {
             return 0;
         }
+    }
+    public static long durationToSeconds(String duration) {
+        String[] units = duration.split(":");
+        long hours = Long.parseLong(units[0]);
+        long minutes = Long.parseLong(units[1]);
+        long seconds = Long.parseLong(units[2]);
+        return hours * 3600 + minutes * 60 + seconds;
     }
 
     private static String formatarSegundos(long segundos) {
