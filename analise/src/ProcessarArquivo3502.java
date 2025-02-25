@@ -252,11 +252,22 @@ public class ProcessarArquivo3502 {
             }
 
             // Adicionando a última linha com os totais
-            Row totalRow = sheet.createRow(rowIndex + 1);
-            totalRow.createCell(0).setCellValue("Total de Agentes");         
-            totalRow.createCell(1).setCellValue("");
-            totalRow.createCell(2).setCellValue(dadosPorAgente.size()); // Total de agentes
-            totalRow.createCell(3).setCellValue("Total Geral");
+            Row totalRow = sheet.createRow(rowIndex + 1);    
+            
+             // 🔹 Mesclar a célula inicial nas linhas 1 e 2
+             int ultimaLinha = sheet.getLastRowNum();      
+            
+            totalRow.createCell(0).setCellValue("Total OPE");         
+            totalRow.createCell(1).setCellValue(dadosPorAgente.size());
+            // Mescla as células da coluna A nas linhas 36 e 37
+            CellRangeAddress cellRangeAddress = new CellRangeAddress(ultimaLinha, sheet.getLastRowNum()+1, 0, 0);
+            sheet.addMergedRegion(cellRangeAddress);
+            // Mescla as células da coluna B nas linhas 36 e 37
+            CellRangeAddress cellRangeAddress2 = new CellRangeAddress(ultimaLinha, sheet.getLastRowNum()+1, 1, 1);
+            sheet.addMergedRegion(cellRangeAddress2);
+            
+            totalRow.createCell(2).setCellValue("Total Geral"); // Total de agentes
+            totalRow.createCell(3).setCellValue("");
             totalRow.createCell(4).setCellValue("");
             totalRow.createCell(5).setCellValue("");
             totalRow.createCell(6).setCellValue("");
@@ -268,13 +279,12 @@ public class ProcessarArquivo3502 {
             totalRow.createCell(12).setCellValue(formatarSegundos(tempoTotalTma).trim());// total de tempo TMA
             totalRow.createCell(13).setCellValue(formatarSegundos(totalMtsl).trim());// MTSL
 
+            // MEscla a celula total
+            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha, sheet.getLastRowNum(), 2, 7)); // mescla celula em total
+                       
             
-            // 🔹 Mesclar a célula inicial nas linhas 1 e 2
-            int ultimaLinha = sheet.getLastRowNum();
-            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha, sheet.getLastRowNum(), 0, 7)); // mescla celula em total
-
-            // 🔹 Mesclar a célula inicial nas linhas 1 a 3
-            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha + 1, ultimaLinha + 1, 0, 7)); // mescla celula em Média
+            // 🔹 Mesclar a célula media
+            sheet.addMergedRegion(new CellRangeAddress(ultimaLinha + 1, ultimaLinha + 1, 2, 7)); // mescla celula em Média
             for (int i = 0; i <= 15; i++) {
                 if (totalRow.getCell(i) != null) {
                     totalRow.getCell(i).setCellStyle(totalStyle);// coloca estilo azul em total  até 14                    
@@ -282,10 +292,10 @@ public class ProcessarArquivo3502 {
             }
 
             Row totalRow2 = sheet.createRow(sheet.getLastRowNum() + 1);
-            totalRow2.createCell(0).setCellValue("Média Geral");
+            totalRow2.createCell(0).setCellValue("");
             totalRow2.createCell(1).setCellValue(" ");
-            totalRow2.createCell(2).setCellValue(" ");
-            totalRow2.createCell(3).setCellValue(" ");
+            totalRow2.createCell(2).setCellValue("Média Geral");
+            totalRow2.createCell(3).setCellValue("");
             totalRow2.createCell(4).setCellValue(" ");
             totalRow2.createCell(5).setCellValue(" ");
             //totalRow2.createCell(6).setCellValue(" ");
