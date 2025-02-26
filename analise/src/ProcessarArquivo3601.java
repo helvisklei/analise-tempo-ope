@@ -1,30 +1,35 @@
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.io.FileOutputStream;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
+
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 
 public class ProcessarArquivo3601 {
 
     public Map<String, String[]> processarArquivo(String csvFile) {
         Map<String, String[]> dados3601 = new HashMap<>();        
-        String outputExcel = "Login_e_Pausas_das_Operadora.xlsx";   
-        
-        //long breakSegundos = 0L;
-        //long toiletSegundos = 0L; 
-        //String  totalDePausasFormatado = "00:00:00";
+        String outputExcel = "Login_e_Pausas_das_Operadora.xlsx"; 
 
         try {
             // Leitura do CSV
-            BufferedReader reader = new BufferedReader(new FileReader(csvFile));
+            BufferedReader reader = new BufferedReader(new InputStreamReader( new FileInputStream(csvFile),StandardCharsets.UTF_8)
+                );
             String line;
 
             // Mapa para armazenar as informações dos eventos
@@ -35,10 +40,10 @@ public class ProcessarArquivo3601 {
 
             while ((line = reader.readLine()) != null) {
                 String[] columns = line.split(";");
-                String agente = columns[0].replace("\"", "");
-                String tipoEvento = columns[4].replace("\"", "");
-                String loginInicial = columns[1].replace("\"", "");
-                String loginFinal = columns[2].replace("\"", "");
+                String agente = columns[0].replace("\"", "").trim();
+                String tipoEvento = columns[4].replace("\"", "").trim();
+                String loginInicial = columns[1].replace("\"", "").trim();
+                String loginFinal = columns[2].replace("\"", "").trim();
 
                 // Ignora eventos sem tipo, login inicial ou login final
                 if (tipoEvento.isEmpty() || loginInicial.isEmpty() || loginFinal.isEmpty()) continue;
@@ -46,10 +51,13 @@ public class ProcessarArquivo3601 {
                 // Adiciona o evento no mapa
                 if (!eventos.containsKey(agente)) {
                     eventos.put(agente, new HashMap<>());
+                    //System.out.println(agente);
                 }
 
                 if (!eventos.get(agente).containsKey(tipoEvento)) {
-                    eventos.get(agente).put(tipoEvento, new EventDetails());
+                    eventos.get(agente).put(tipoEvento.trim(), new EventDetails());
+                   // System.out.println("Tipo evento no if "+ tipoEvento.trim());// localiza a ginastica dento tipo evento
+                    //System.out.println(agente +" Operadora cm evernto " + eventos.get(agente));
                 }
 
                 EventDetails eventDetails = eventos.get(agente).get(tipoEvento);
@@ -89,7 +97,7 @@ public class ProcessarArquivo3601 {
             headerRow.createCell(9).setCellValue("Outros");
 
             // Criar um TreeMap com comparador personalizado para ordenar numericamente
-            Map<String, Map<String, EventDetails>> eventosOrdenados = new TreeMap<>(Comparator.comparingInt(s -> Integer.parseInt(s.replace("ope", ""))));
+            Map<String, Map<String, EventDetails>> eventosOrdenados = new TreeMap<>(Comparator.comparingInt(s -> Integer.parseInt(s.replace("ope", "").trim())));// coloquei trim
 
             // Adicionar os dados ao novo TreeMap ordenado
             eventosOrdenados.putAll(eventos);
@@ -99,16 +107,30 @@ public class ProcessarArquivo3601 {
             for (Map.Entry<String, Map<String, EventDetails>> entryAgente : eventosOrdenados.entrySet()) {
                 String agente = entryAgente.getKey();
                 Map<String, EventDetails> detalhesEventos = entryAgente.getValue();
+                //System.out.println(" detalhe evento em map " + detalhesEventos);// verificar se a pausa ginastica é armazenada
 
                 // Encontrar as pausas
-                Map<String, EventDetails> pausas = new HashMap<>();
+                Map<String, EventDetails> pausas = new HashMap<>(); // vazio
+                EventDetails outrosEventos = new EventDetails(); // Cria um objeto para "Outros"
+
+                //System.out.println("pausas " + pausas);
 
                 for (Map.Entry<String, EventDetails> entryEvento : detalhesEventos.entrySet()) {
                     String tipoEvento = entryEvento.getKey();
                     EventDetails eventDetails = entryEvento.getValue();
-                    if (isPausa(tipoEvento)) {
+                    if (isPausa(tipoEvento)) {                       
                         pausas.put(tipoEvento, eventDetails);
-                    }
+                        //System.out.println("pausas " + pausas);// analisando as inclusões das pausas no mapa
+                    }else if (!isCategoriaEspecifica(tipoEvento)){
+                        // Se não for pausa predefinidas diciona em outros
+                        outrosEventos.incrementarQuantidade();
+                        outrosEventos.incrementarDuracao(eventDetails.getDuracao());
+                    }                    
+                }
+
+                            // Adiciona "Outros" ao mapa de pausas (se houver eventos)
+                if (outrosEventos.getQuantidade() > 0) {
+                    pausas.put("Outros", outrosEventos);
                 }
                 String tlFormatado = secondsToTime(timeToSeconds(getLoginFinal(detalhesEventos)) - timeToSeconds(getLoginInicial(detalhesEventos)));
                 // Calcula os totais em segundos
@@ -209,11 +231,22 @@ public class ProcessarArquivo3601 {
     private static boolean isPausa(String tipoEvento) {
         return 
             tipoEvento.equalsIgnoreCase("Break") ||
-            tipoEvento.equalsIgnoreCase("Lanche") ||
-            tipoEvento.equalsIgnoreCase("Ginastica")||
-            tipoEvento.equalsIgnoreCase("Toilet") ||
-            tipoEvento.equalsIgnoreCase("Assuntos Internos");
+            tipoEvento.trim().equalsIgnoreCase("Lanche") ||
+            tipoEvento.trim().equalsIgnoreCase("Ginástica")||
+            tipoEvento.trim().equalsIgnoreCase("Toilet") ||
+            tipoEvento.trim().equalsIgnoreCase("Assuntos Internos");
     }
+
+    // Verifica se o evento é uma categoria específica
+    private static boolean isCategoriaEspecifica(String tipoEvento) {
+        return CATEGORIAS_ESPECIFICAS.contains(tipoEvento.trim());
+    }
+
+    // cria uma categoria que não deve ser lida e contabilizada
+    private static final Set<String> CATEGORIAS_ESPECIFICAS = Set.of(
+        "Pausa Sistema", "Login", "Pré-pausa", "Pré-pausa: Break", "Pré-pausa: Lanche", "Pré-pausa: Toilet",
+         "Pré-pausa: Login", "Pré-pausa: Assuntos Internos"
+    );
 
     // Obtém o Login Inicial (menor hora)
     private static String getLoginInicial(Map<String, EventDetails> eventos) {
@@ -264,6 +297,14 @@ public class ProcessarArquivo3601 {
         int indiceHifen = pausaFormatada.indexOf(" - ") + 3;
         // Retorna a substring a partir do índice do hífen até o final da string
         return pausaFormatada.substring(indiceHifen);
+    }
+
+    public class StringUtils {
+        public static String removerAcentos(String str) {
+            String normalized = Normalizer.normalize(str, Normalizer.Form.NFD);
+            Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+            return pattern.matcher(normalized).replaceAll("");
+        }
     }
 
 }
