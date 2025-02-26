@@ -28,6 +28,8 @@ public class ProcessarArquivo3502 {
         try (BufferedReader br = Files.newBufferedReader(Paths.get(csvFile));
                 XSSFWorkbook workbook = new XSSFWorkbook()) { // Usando XSSFWorkbook para criar um arquivo Excel
             
+            // Criar os estilos e armazená-los em um mapa
+            Map<String, CellStyle> estilos = EstilosExcel.criarEstilos(workbook);
                     
             //Map<String, CellStyle> estilos = EstilosExcel.criarEstilos(workbook);         
             // Obter a data atual
@@ -185,8 +187,6 @@ public class ProcessarArquivo3502 {
                     row.createCell(19).setCellValue(dadosAgente3601[7]); // Assustos internos
                     row.createCell(20).setCellValue(dadosAgente3601[8]); // Outros
 
-                    
-
                     row.getCell(0).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(0);
 
@@ -243,12 +243,7 @@ public class ProcessarArquivo3502 {
 
                     row.getCell(20).setCellStyle(estiloBorda);
                     sheet.autoSizeColumn(20);
-                    //row.getCell(20).setCellStyle(estiloBorda);   
-                    //sheet.autoSizeColumn(20);                                     
-                    
                 }   
-                //System.out.println("Total de coolnas " + maxColumns);             
-                
             }
 
             // Adicionando a última linha com os totais
@@ -281,9 +276,8 @@ public class ProcessarArquivo3502 {
 
             // MEscla a celula total
             sheet.addMergedRegion(new CellRangeAddress(ultimaLinha, sheet.getLastRowNum(), 2, 7)); // mescla celula em total
-                       
-            
             // 🔹 Mesclar a célula media
+
             sheet.addMergedRegion(new CellRangeAddress(ultimaLinha + 1, ultimaLinha + 1, 2, 7)); // mescla celula em Média
             for (int i = 0; i <= 15; i++) {
                 if (totalRow.getCell(i) != null) {
@@ -312,7 +306,8 @@ public class ProcessarArquivo3502 {
                     totalRow2.getCell(i).setCellStyle(totalStyle); // coloca estilo azul em media  até 12
                 }
             }
-
+            
+           
             //'sheet' planilha
             int totalLinhas = sheet.getLastRowNum(); // Última linha preenchida
 
@@ -357,12 +352,72 @@ public class ProcessarArquivo3502 {
                                 isTime);
                         tempo.setCellStyle(style); // Aplica a formatação na célula
 
-                    }                  
-
+                    }  
                 }
-                
             }
 
+            // Define a linha inicial
+            int indiceLinha = sheet.getLastRowNum() + 3;
+
+            // Cria a linha para o título "TABELA DE INDICE"
+            Row tituloRow = sheet.createRow(indiceLinha);
+            Cell tituloCell = tituloRow.createCell(0);
+            tituloCell.setCellValue("TABELA DE INDICE");
+
+            // Aplica o estilo ao título (opcional)
+            tituloCell.setCellStyle(totalStyle);
+
+            // Mescla as colunas de 0 a 3 na linha do título
+            sheet.addMergedRegion(new CellRangeAddress(indiceLinha, indiceLinha, 0, 5));
+
+            indiceLinha++; // Avança para a próxima linha antes de adicionar os dados
+
+            // Dados a serem inseridos (correspondentes à tabela)
+            String[][] tabelaIndices = {                
+                {"1º LIGAÇÃO","","","", "1º L", "09:05:59"},
+                {"JORNADA DE TRABALHO DIÁRIA","","","", "JTD", "06:00:00"},
+                {"TEMPO LOGADO","","","", "TL","06:00:00"},
+                {"TOTAL DE HORAS TRABALHA NA PA","","","","THPA", "05:20:00"},
+                {"TEMPO TOTAL EM LIGAÇÃO","","","", "TTL", "03:10:00"},
+                {"QUANTIDADE DE LIGAÇÕES","","","", "QTD", "250"},
+                {"TEMPO MEDIO ATENDIMENTO","","","", "TMA", "00:00:40"},
+                {"MAIOR TEMPO EM UMA SÓ LIGAÇÃO","","","", "MTSL", "00:03:00"},
+                {"REFERÊNCIA DE TEMPO DE LIGAÇÃO","","","", "RTL", "00:01:30"},
+                {"TÉRMINO DA ÚLTIMA LIGAÇÃO DO DIA","","","", "TULD", "xxxx"},
+                {"OUTROS: FEEDBACK, MANUTENÇÃO, REUNIÃO E TREINAMENTO", "", "",""}
+            };
+
+            // Loop para adicionar os dados da tabela
+            for (String[] linhaDados : tabelaIndices) {
+                Row row = sheet.createRow(indiceLinha);
+                
+                if (linhaDados[0].equals("OUTROS: FEEDBACK, MANUTENÇÃO, REUNIÃO E TREINAMENTO")) {
+                    // Cria a célula apenas na coluna 0 e mescla até a coluna 3
+                    Cell cell = row.createCell(0);
+                    cell.setCellValue(linhaDados[0]);
+                    cell.setCellStyle(totalStyle);
+                    //cell.setCellStyle(estilos.get("cell"));
+                    // Aplicar o estilo "cell" à célula                    
+                    
+                    // Antes de mesclar, verificamos se a região já está mesclada
+                    if (!isRegionMerged(sheet, indiceLinha, 0, indiceLinha, 5)) {
+                        sheet.addMergedRegion(new CellRangeAddress(indiceLinha, indiceLinha, 0, 5));
+                        //cell.setCellStyle(estilos.get("cell"));
+                    }
+                } else {
+                    // Cria as células normalmente para outras linhas
+                    for (int col = 0; col < linhaDados.length; col++) {
+                        Cell cell = row.createCell(col);
+                        cell.setCellValue(linhaDados[col]); 
+                        cell.setCellStyle(estilos.get("cell"));                       
+                    }
+                    // Antes de mesclar, verificamos se a região já está mesclada
+                    if (!isRegionMerged(sheet, indiceLinha, 0, indiceLinha, 3)) {
+                        sheet.addMergedRegion(new CellRangeAddress(indiceLinha, indiceLinha, 0, 3));                        
+                    }
+                }
+                indiceLinha++;
+            }
             // Salvar o arquivo Excel
             try (FileOutputStream fileOut = new FileOutputStream("operadoras.xlsx")) {
                 sheet.autoSizeColumn(15);
@@ -371,15 +426,27 @@ public class ProcessarArquivo3502 {
 
             System.out.println("Arquivo Excel 'operadoras.xlsx' gerado com sucesso!");
 
-        } catch (IOException e) {
-            e.printStackTrace();  
-            
-            try {
-                Files.write(Paths.get("erro.log"), Arrays.asList(e.toString()), StandardOpenOption.APPEND);
-            } catch (IOException ex) {
-                ex.printStackTrace(); // Se der erro ao escrever no arquivo, exibe no console
-            }           
+            } catch (IOException e) {
+                e.printStackTrace();  
+                
+                try {
+                    Files.write(Paths.get("erro.log"), Arrays.asList(e.toString()), StandardOpenOption.APPEND);
+                } catch (IOException ex) {
+                    ex.printStackTrace(); // Se der erro ao escrever no arquivo, exibe no console
+                }           
+            }
+}
+
+    // Método para verificar se uma região já foi mesclada
+    private static boolean isRegionMerged(Sheet sheet, int firstRow, int firstCol, int lastRow, int lastCol) {
+        for (int i = 0; i < sheet.getNumMergedRegions(); i++) {
+            CellRangeAddress mergedRegion = sheet.getMergedRegion(i);
+            if (mergedRegion.getFirstRow() == firstRow && mergedRegion.getFirstColumn() == firstCol &&
+                mergedRegion.getLastRow() == lastRow && mergedRegion.getLastColumn() == lastCol) {
+                return true;
+            }
         }
+        return false;
     }
 
     private static long calcularDiferencaSegundos(String inicio, String fim) {
