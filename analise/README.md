@@ -96,6 +96,6 @@ Adicione as bibliotecas do Apache POI ao seu projeto. No caso de uso com **Maven
 
 ## Autor
 
-Desenvolvido por Helvisklei.
+Desenvolvido por Helvisklei em 26/02/2025.
 
 
